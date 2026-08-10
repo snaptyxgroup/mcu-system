@@ -68,8 +68,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Fast lookup by barcode at scanning stations
-            $table->index('barcode_code');
+            // Note: barcode_code already has a unique index from ->unique() above
 
             // Dashboard filter: registrations per org + status
             $table->index(['organization_id', 'status'], 'idx_registrations_org_status');

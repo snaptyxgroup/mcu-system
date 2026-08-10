@@ -9,7 +9,7 @@ use App\Imports\McuRegistrationImport;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
-use Filament\Resources\Components\Tab;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Facades\Excel;
@@ -57,13 +57,10 @@ class ListMcuRegistrations extends ListRecords
                         ->label('Default Organization')
                         ->required()
                         ->searchable()
-                        ->preload()
-                        ->relationship(
-                            name: 'organization',
-                            titleAttribute: 'name',
-                            modifyQueryUsing: fn (Builder $query) => $query
-                                ->where('org_type', 'CORPORATE')
-                                ->orderBy('name')
+                        ->options(fn () => \App\Models\Organization::query()
+                            ->where('org_type', 'CORPORATE')
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
                         )
                         ->helperText('Organization to assign if not specified per row in the Excel file.'),
 
@@ -144,17 +141,17 @@ class ListMcuRegistrations extends ListRecords
 
             'registered' => Tab::make('Registered')
                 ->icon('heroicon-o-clipboard-document')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', 'REGISTERED'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'REGISTERED'))
                 ->badge(fn () => \App\Models\McuRegistration::where('status', 'REGISTERED')->count()),
 
             'in_progress' => Tab::make('In Progress')
                 ->icon('heroicon-o-arrow-right-circle')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', 'IN_PROGRESS'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'IN_PROGRESS'))
                 ->badge(fn () => \App\Models\McuRegistration::where('status', 'IN_PROGRESS')->count()),
 
             'completed' => Tab::make('Completed')
                 ->icon('heroicon-o-check-circle')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', 'COMPLETED'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'COMPLETED'))
                 ->badge(fn () => \App\Models\McuRegistration::where('status', 'COMPLETED')->count()),
         ];
     }

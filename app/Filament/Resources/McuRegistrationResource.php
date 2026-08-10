@@ -9,12 +9,14 @@ use App\Models\McuRegistration;
 use App\Models\Organization;
 use App\Models\Patient;
 use App\Models\Station;
+use Filament\Actions;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -42,9 +44,9 @@ class McuRegistrationResource extends Resource
 {
     protected static ?string $model = McuRegistration::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationGroup = 'MCU Operations';
+    protected static string | \UnitEnum | null $navigationGroup = 'MCU Operations';
 
     protected static ?int $navigationSort = 10;
 
@@ -56,14 +58,14 @@ class McuRegistrationResource extends Resource
 
     // ── Form ──────────────────────────────────────────────────────────────
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
+        return $schema->schema([
 
             // ╔══════════════════════════════════════════════════════════════
             // ║ SECTION 1: Company / Organization Selection
             // ╚══════════════════════════════════════════════════════════════
-            Forms\Components\Section::make('Company / Organization')
+            Section::make('Company / Organization')
                 ->description('Select the corporate client for this MCU registration.')
                 ->icon('heroicon-o-building-office-2')
                 ->columns(2)
@@ -132,7 +134,7 @@ class McuRegistrationResource extends Resource
             // ╔══════════════════════════════════════════════════════════════
             // ║ SECTION 2: Patient Selection
             // ╚══════════════════════════════════════════════════════════════
-            Forms\Components\Section::make('Patient')
+            Section::make('Patient')
                 ->description('Search the patient by name, NIK, or employee ID.')
                 ->icon('heroicon-o-user')
                 ->columns(2)
@@ -222,7 +224,7 @@ class McuRegistrationResource extends Resource
             // ╔══════════════════════════════════════════════════════════════
             // ║ SECTION 3: Barcode & Status
             // ╚══════════════════════════════════════════════════════════════
-            Forms\Components\Section::make('Registration Details')
+            Section::make('Registration Details')
                 ->description('Barcode and registration status.')
                 ->icon('heroicon-o-qr-code')
                 ->columns(2)
@@ -240,7 +242,7 @@ class McuRegistrationResource extends Resource
                         ->placeholder('Auto-generated on patient selection')
                         ->hint('Scan physical barcode or use auto-generated code.')
                         ->suffixAction(
-                            Forms\Components\Actions\Action::make('regenerate_barcode')
+                            Actions\Action::make('regenerate_barcode')
                                 ->label('Regenerate')
                                 ->icon('heroicon-o-arrow-path')
                                 ->action(function (Set $set) {
@@ -268,7 +270,7 @@ class McuRegistrationResource extends Resource
             // ║ SECTION 4: Dynamic Stations (Stasiun Pemeriksaan)
             // ║ Requirement #2: Many-to-Many via CheckboxList
             // ╚══════════════════════════════════════════════════════════════
-            Forms\Components\Section::make('Stations (Stasiun Pemeriksaan)')
+            Section::make('Stations (Stasiun Pemeriksaan)')
                 ->description('Assign the examination stations this patient must visit.')
                 ->icon('heroicon-o-map-pin')
                 ->schema([
@@ -308,7 +310,7 @@ class McuRegistrationResource extends Resource
             // ║ SECTION 5: Customizable Registration Data (JSON)
             // ║ Requirement #3: custom_fields JSON via KeyValue
             // ╚══════════════════════════════════════════════════════════════
-            Forms\Components\Section::make('Custom Registration Fields')
+            Section::make('Custom Registration Fields')
                 ->description('Additional demographic data specific to the selected company. Add key-value pairs as needed.')
                 ->icon('heroicon-o-adjustments-horizontal')
                 ->collapsible()
@@ -380,7 +382,7 @@ class McuRegistrationResource extends Resource
             // ║ SECTION 6: Webcam Capture for Employee Photo
             // ║ Requirement #5: Custom ViewField with HTML5 video/canvas
             // ╚══════════════════════════════════════════════════════════════
-            Forms\Components\Section::make('Employee Photo')
+            Section::make('Employee Photo')
                 ->description('Capture a live photo of the employee using the device webcam.')
                 ->icon('heroicon-o-camera')
                 ->collapsible()
@@ -415,7 +417,7 @@ class McuRegistrationResource extends Resource
                     'patient:id,name,employee_id,department,job_risk_level',
                     'stations:id,name',
                 ])
-                ->latest()
+                ->latest('created_at')
             )
 
             ->columns([
@@ -509,15 +511,15 @@ class McuRegistrationResource extends Resource
             ])
 
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Actions\ViewAction::make(),
+                Actions\EditAction::make(),
 
                 /**
                  * Quick status advancement — single-click UX for
                  * receptionists/nurses to advance status without
                  * opening the full edit form.
                  */
-                Tables\Actions\Action::make('advance_status')
+                Actions\Action::make('advance_status')
                     ->label('Advance Status')
                     ->icon('heroicon-o-arrow-right-circle')
                     ->color('warning')
@@ -552,10 +554,10 @@ class McuRegistrationResource extends Resource
             ])
 
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                    Actions\RestoreBulkAction::make(),
+                    Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])
 
